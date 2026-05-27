@@ -34,7 +34,6 @@ export default function Home() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (prUrl: string) => {
-    // 重置状态
     setIsLoading(true);
     setStatus("");
     setPrInfo(null);
@@ -67,24 +66,19 @@ export default function Home() {
           if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
-
             switch (data.type) {
               case "status":
                 setStatus(data.message);
                 break;
-
               case "pr_info":
                 setPrInfo(data.data);
                 break;
-
               case "review_start":
                 setStatus("");
                 break;
-
               case "chunk":
                 setReviewText((prev) => prev + data.content);
                 break;
-
               case "done":
                 setIsDone(true);
                 setIsLoading(false);
@@ -95,90 +89,73 @@ export default function Home() {
                   prUrl: data.prUrl,
                 });
                 break;
-
               case "error":
                 setError(data.message);
                 setIsLoading(false);
                 break;
             }
-          } catch (e) {
-            console.warn("Invalid SSE message:", line);
+          } catch {
             continue;
           }
         }
       }
-    } catch (err: any) {
-      setError(err?.message ?? "请求失败，请重试");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "请求失败，请重试");
       setIsLoading(false);
     }
   };
 
   const handlePublish = async () => {
     if (!reviewState || !reviewText) return;
-
     setIsPublishing(true);
     try {
       const res = await fetch("/api/github/comment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          owner: reviewState.owner,
-          repo: reviewState.repo,
-          pull_number: reviewState.pull_number,
+          ...reviewState,
           reviewText,
           prUrl: reviewState.prUrl,
         }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        setPublishedUrl(data.commentUrl);
-      } else {
-        setError(data.error ?? "发布失败");
-      }
-    } catch (err: any) {
-      setError(err?.message ?? "发布失败");
+      if (data.success) setPublishedUrl(data.commentUrl);
+      else setError(data.error ?? "发布失败");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "发布失败");
     } finally {
       setIsPublishing(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Code Reviewer AI</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            粘贴 GitHub PR 链接，AI 自动生成代码 Review 意见
-          </p>
+    <>
+      <div className="section-header">
+        <div className="section-title">PR 代码审查</div>
+        <div className="section-desc">
+          粘贴 GitHub Pull Request 链接，AI 自动分析代码变更
         </div>
-
-        {/* 输入表单 */}
-        <ReviewForm onSubmit={handleSubmit} isLoading={isLoading} />
-
-        {/* 错误提示 */}
-        {error && (
-          <div
-            className="p-3 bg-red-50 border border-red-200
-            rounded-lg text-sm text-red-600"
-          >
-            {error}
-          </div>
-        )}
-
-        {/* Review 结果 */}
-        <ReviewResult
-          prInfo={prInfo}
-          status={status}
-          reviewText={reviewText}
-          isLoading={isLoading}
-          isDone={isDone}
-          onPublish={handlePublish}
-          isPublishing={isPublishing}
-          publishedUrl={publishedUrl}
-        />
       </div>
-    </main>
+
+      <ReviewForm onSubmit={handleSubmit} isLoading={isLoading} />
+
+      {error && (
+        <div className="error-banner">
+          <span>⚠</span>
+          {error}
+        </div>
+      )}
+
+      <ReviewResult
+        prInfo={prInfo}
+        status={status}
+        reviewText={reviewText}
+        isLoading={isLoading}
+        isDone={isDone}
+        onPublish={handlePublish}
+        isPublishing={isPublishing}
+        publishedUrl={publishedUrl}
+      />
+    </>
   );
 }

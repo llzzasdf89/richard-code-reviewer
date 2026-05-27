@@ -1,9 +1,10 @@
 /**
- * AI调用层
+ * AI调用层，注意采用的是阿里千问，非Anthropic官方模型和API
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { FileDiff, formatDiffForReview } from "./diff";
+import type { FileDiff } from "../diff/type";
+import { formatDiffForReview } from "../diff";
 
 const client = new Anthropic({
   baseURL: "https://dashscope.aliyuncs.com/apps/anthropic",
