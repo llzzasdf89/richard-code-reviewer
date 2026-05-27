@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface PRInfo {
   title: string;
@@ -36,7 +36,6 @@ export default function ReviewResult({
 
   return (
     <div className="w-full space-y-4">
-
       {/* PR 基本信息 */}
       {prInfo && (
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -51,12 +50,13 @@ export default function ReviewResult({
                 {prInfo.title}
               </a>
               <p className="text-sm text-gray-500 mt-1">
-                {prInfo.author} 将 {prInfo.headBranch} 合并到 {prInfo.baseBranch}
+                {prInfo.author} 将 {prInfo.headBranch} 合并到{" "}
+                {prInfo.baseBranch}
               </p>
             </div>
             <div className="text-sm text-gray-500 text-right shrink-0">
               <span className="text-green-600">+{prInfo.additions}</span>
-              {' / '}
+              {" / "}
               <span className="text-red-500">-{prInfo.deletions}</span>
               <br />
               <span>{prInfo.changedFiles} 个文件</span>
@@ -103,12 +103,11 @@ export default function ReviewResult({
               disabled={isPublishing}
               className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
-              {isPublishing ? '发布中...' : '发布到 GitHub PR'}
+              {isPublishing ? "发布中..." : "发布到 GitHub PR"}
             </button>
           )}
         </div>
       )}
-
     </div>
   );
 }

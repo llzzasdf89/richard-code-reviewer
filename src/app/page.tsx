@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import ReviewForm from '@/components/ReviewForm';
-import ReviewResult from '@/components/ReviewResult';
+import { useState } from "react";
+import ReviewForm from "@/components/ReviewForm";
+import ReviewResult from "@/components/ReviewResult";
 
 interface PRInfo {
   title: string;
@@ -24,87 +24,91 @@ interface ReviewState {
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState("");
   const [prInfo, setPrInfo] = useState<PRInfo | null>(null);
-  const [reviewText, setReviewText] = useState('');
+  const [reviewText, setReviewText] = useState("");
   const [isDone, setIsDone] = useState(false);
   const [reviewState, setReviewState] = useState<ReviewState | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (prUrl: string) => {
     // 重置状态
     setIsLoading(true);
-    setStatus('');
+    setStatus("");
     setPrInfo(null);
-    setReviewText('');
+    setReviewText("");
     setIsDone(false);
     setReviewState(null);
     setPublishedUrl(null);
-    setError('');
+    setError("");
 
     try {
-      const res = await fetch('/api/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prUrl }),
       });
 
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
-      let buffer = '';
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-        buffer = lines.pop() ?? '';
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() ?? "";
 
         for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
 
-          const data = JSON.parse(line.slice(6));
+            switch (data.type) {
+              case "status":
+                setStatus(data.message);
+                break;
 
-          switch (data.type) {
-            case 'status':
-              setStatus(data.message);
-              break;
+              case "pr_info":
+                setPrInfo(data.data);
+                break;
 
-            case 'pr_info':
-              setPrInfo(data.data);
-              break;
+              case "review_start":
+                setStatus("");
+                break;
 
-            case 'review_start':
-              setStatus('');
-              break;
+              case "chunk":
+                setReviewText((prev) => prev + data.content);
+                break;
 
-            case 'chunk':
-              setReviewText(prev => prev + data.content);
-              break;
+              case "done":
+                setIsDone(true);
+                setIsLoading(false);
+                setReviewState({
+                  owner: data.owner,
+                  repo: data.repo,
+                  pull_number: data.pull_number,
+                  prUrl: data.prUrl,
+                });
+                break;
 
-            case 'done':
-              setIsDone(true);
-              setIsLoading(false);
-              setReviewState({
-                owner: data.owner,
-                repo: data.repo,
-                pull_number: data.pull_number,
-                prUrl: data.prUrl,
-              });
-              break;
-
-            case 'error':
-              setError(data.message);
-              setIsLoading(false);
-              break;
+              case "error":
+                setError(data.message);
+                setIsLoading(false);
+                break;
+            }
+          } catch (e) {
+            console.warn("Invalid SSE message:", line);
+            continue;
           }
         }
       }
     } catch (err: any) {
-      setError(err?.message ?? '请求失败，请重试');
+      setError(err?.message ?? "请求失败，请重试");
       setIsLoading(false);
     }
   };
@@ -114,9 +118,9 @@ export default function Home() {
 
     setIsPublishing(true);
     try {
-      const res = await fetch('/api/github/comment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/github/comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           owner: reviewState.owner,
           repo: reviewState.repo,
@@ -130,10 +134,10 @@ export default function Home() {
       if (data.success) {
         setPublishedUrl(data.commentUrl);
       } else {
-        setError(data.error ?? '发布失败');
+        setError(data.error ?? "发布失败");
       }
     } catch (err: any) {
-      setError(err?.message ?? '发布失败');
+      setError(err?.message ?? "发布失败");
     } finally {
       setIsPublishing(false);
     }
@@ -142,27 +146,23 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
-
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Code Reviewer AI
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Code Reviewer AI</h1>
           <p className="text-gray-500 mt-1 text-sm">
             粘贴 GitHub PR 链接，AI 自动生成代码 Review 意见
           </p>
         </div>
 
         {/* 输入表单 */}
-        <ReviewForm
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
+        <ReviewForm onSubmit={handleSubmit} isLoading={isLoading} />
 
         {/* 错误提示 */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200
-            rounded-lg text-sm text-red-600">
+          <div
+            className="p-3 bg-red-50 border border-red-200
+            rounded-lg text-sm text-red-600"
+          >
             {error}
           </div>
         )}
@@ -178,7 +178,6 @@ export default function Home() {
           isPublishing={isPublishing}
           publishedUrl={publishedUrl}
         />
-
       </div>
     </main>
   );

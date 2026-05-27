@@ -2,15 +2,15 @@
  * AI调用层
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-import { FileDiff, formatDiffForReview } from './diff';
+import Anthropic from "@anthropic-ai/sdk";
+import { FileDiff, formatDiffForReview } from "./diff";
 
 const client = new Anthropic({
-  baseURL: 'https://dashscope.aliyuncs.com/apps/anthropic',
+  baseURL: "https://dashscope.aliyuncs.com/apps/anthropic",
   apiKey: process.env.DASHSCOPE_API_KEY,
 });
 
-const MODEL_NAME = 'qwen-plus-2025-07-28';
+const MODEL_NAME = "qwen-plus-2025-07-28";
 
 const SYSTEM_PROMPT = `你是一位经验丰富的高级工程师，正在对 GitHub Pull Request 进行代码审查。
 
@@ -44,11 +44,11 @@ export async function reviewDiffBatch(
     system: SYSTEM_PROMPT,
     messages: [
       {
-        role: 'user',
+        role: "user",
         content: `## PR 信息
 
 **标题**：${prTitle}
-**描述**：${prDescription || '（无描述）'}
+**描述**：${prDescription || "（无描述）"}
 
 ## 代码变更
 
@@ -60,9 +60,9 @@ ${diffText}
   });
 
   return response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    .map(b => b.text)
-    .join('');
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("");
 }
 
 // ─── 完整 PR review，支持 streaming 回调 ─────────────────────────────────────
@@ -71,7 +71,7 @@ export async function reviewPR(
   batches: FileDiff[][],
   prTitle: string,
   prDescription: string,
-  onChunk: (chunk: string) => void,      // 每收到一段文字就回调
+  onChunk: (chunk: string) => void, // 每收到一段文字就回调
   onBatchStart: (current: number, total: number) => void, // 开始新批次时回调
 ): Promise<string> {
   const results: string[] = [];
@@ -82,7 +82,7 @@ export async function reviewPR(
 
     // 多批次时在每批前加标题
     if (batches.length > 1) {
-      const batchFiles = batch.map(f => f.filename).join('、');
+      const batchFiles = batch.map((f) => f.filename).join("、");
       const header = `\n\n## 第 ${i + 1} 批（${batchFiles}）\n\n`;
       onChunk(header);
       results.push(header);
@@ -95,12 +95,12 @@ export async function reviewPR(
       system: SYSTEM_PROMPT,
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: `## PR 信息
 
 **标题**：${prTitle}
-**描述**：${prDescription || '（无描述）'}
-${batches.length > 1 ? `\n**注意**：这是第 ${i + 1}/${batches.length} 批文件，请只 review 以下文件。` : ''}
+**描述**：${prDescription || "（无描述）"}
+${batches.length > 1 ? `\n**注意**：这是第 ${i + 1}/${batches.length} 批文件，请只 review 以下文件。` : ""}
 
 ## 代码变更
 
@@ -111,11 +111,11 @@ ${formatDiffForReview(batch)}
       ],
     });
 
-    let batchResult = '';
+    let batchResult = "";
     for await (const event of stream) {
       if (
-        event.type === 'content_block_delta' &&
-        event.delta.type === 'text_delta'
+        event.type === "content_block_delta" &&
+        event.delta.type === "text_delta"
       ) {
         const chunk = event.delta.text;
         onChunk(chunk);
@@ -126,7 +126,7 @@ ${formatDiffForReview(batch)}
     results.push(batchResult);
   }
 
-  return results.join('');
+  return results.join("");
 }
 
 // ─── 把 review 结果格式化成 GitHub 评论的 Markdown ───────────────────────────

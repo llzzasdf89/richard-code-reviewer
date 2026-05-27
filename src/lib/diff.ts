@@ -7,7 +7,7 @@
 // 单个文件的 diff 块
 export interface FileDiff {
   filename: string;
-  status: 'added' | 'modified' | 'deleted' | 'renamed';
+  status: "added" | "modified" | "deleted" | "renamed";
   additions: number;
   deletions: number;
   content: string; // 这个文件的完整 diff 内容
@@ -29,7 +29,7 @@ const SKIP_PATTERNS = [
 ];
 
 function shouldSkipFile(filename: string): boolean {
-  return SKIP_PATTERNS.some(pattern => pattern.test(filename));
+  return SKIP_PATTERNS.some((pattern) => pattern.test(filename));
 }
 
 // ─── 解析 diff 文本，拆分成按文件的数组 ──────────────────────────────────────
@@ -41,7 +41,7 @@ export function parseDiff(rawDiff: string): FileDiff[] {
   const fileDiffs = rawDiff.split(/^diff --git /m).filter(Boolean);
 
   for (const fileDiff of fileDiffs) {
-    const lines = fileDiff.split('\n');
+    const lines = fileDiff.split("\n");
 
     // 第一行格式：a/path/to/file b/path/to/file
     const firstLine = lines[0];
@@ -54,17 +54,17 @@ export function parseDiff(rawDiff: string): FileDiff[] {
     if (shouldSkipFile(filename)) continue;
 
     // 判断文件状态
-    let status: FileDiff['status'] = 'modified';
-    if (fileDiff.includes('new file mode')) status = 'added';
-    else if (fileDiff.includes('deleted file mode')) status = 'deleted';
-    else if (fileDiff.includes('rename from')) status = 'renamed';
+    let status: FileDiff["status"] = "modified";
+    if (fileDiff.includes("new file mode")) status = "added";
+    else if (fileDiff.includes("deleted file mode")) status = "deleted";
+    else if (fileDiff.includes("rename from")) status = "renamed";
 
     // 统计增删行数
     let additions = 0;
     let deletions = 0;
     for (const line of lines) {
-      if (line.startsWith('+') && !line.startsWith('+++')) additions++;
-      if (line.startsWith('-') && !line.startsWith('---')) deletions++;
+      if (line.startsWith("+") && !line.startsWith("+++ ")) additions++;
+      if (line.startsWith("-") && !line.startsWith("---")) deletions++;
     }
 
     files.push({
@@ -72,7 +72,7 @@ export function parseDiff(rawDiff: string): FileDiff[] {
       status,
       additions,
       deletions,
-      content: 'diff --git ' + fileDiff,
+      content: "diff --git " + fileDiff,
     });
   }
 
@@ -100,15 +100,22 @@ export function batchFileDiffs(files: FileDiff[]): FileDiff[][] {
         currentBatch = [];
         currentChars = 0;
       }
-      batches.push([{
-        ...file,
-        content: file.content.slice(0, MAX_CHARS_PER_BATCH) + '\n... (diff 过长，已截断)',
-      }]);
+      batches.push([
+        {
+          ...file,
+          content:
+            file.content.slice(0, MAX_CHARS_PER_BATCH) +
+            "\n... (diff 过长，已截断)",
+        },
+      ]);
       continue;
     }
 
     // 加入当前批次会超限，先把当前批次存起来
-    if (currentChars + fileChars > MAX_CHARS_PER_BATCH && currentBatch.length > 0) {
+    if (
+      currentChars + fileChars > MAX_CHARS_PER_BATCH &&
+      currentBatch.length > 0
+    ) {
       batches.push(currentBatch);
       currentBatch = [];
       currentChars = 0;
@@ -130,12 +137,12 @@ export function batchFileDiffs(files: FileDiff[]): FileDiff[][] {
 
 export function formatDiffForReview(files: FileDiff[]): string {
   return files
-    .map(file => {
+    .map((file) => {
       const statusLabel = {
-        added: '新增文件',
-        modified: '修改文件',
-        deleted: '删除文件',
-        renamed: '重命名文件',
+        added: "新增文件",
+        modified: "修改文件",
+        deleted: "删除文件",
+        renamed: "重命名文件",
       }[file.status];
 
       return `## ${file.filename} (${statusLabel}，+${file.additions} -${file.deletions})
@@ -144,5 +151,5 @@ export function formatDiffForReview(files: FileDiff[]): string {
 ${file.content}
 \`\`\``;
     })
-    .join('\n\n---\n\n');
+    .join("\n\n---\n\n");
 }

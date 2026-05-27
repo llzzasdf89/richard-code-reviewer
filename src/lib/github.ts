@@ -1,5 +1,7 @@
-import { Octokit } from '@octokit/rest';
-
+import { Octokit } from "@octokit/rest";
+if (!process.env.GITHUB_TOKEN) {
+  throw new Error("缺少 GITHUB_TOKEN 环境变量");
+}
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
@@ -13,12 +15,12 @@ export function parsePRUrl(url: string): {
   repo: string;
   pull_number: number;
 } {
-  const match = url.match(
-    /github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/
-  );
+  const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
 
   if (!match) {
-    throw new Error('无效的 GitHub PR 链接，格式应为：https://github.com/owner/repo/pull/123');
+    throw new Error(
+      "无效的 GitHub PR 链接，格式应为：https://github.com/owner/repo/pull/123",
+    );
   }
 
   return {
@@ -33,7 +35,7 @@ export function parsePRUrl(url: string): {
 export async function getPRInfo(
   owner: string,
   repo: string,
-  pull_number: number
+  pull_number: number,
 ) {
   const { data } = await octokit.pulls.get({
     owner,
@@ -43,8 +45,8 @@ export async function getPRInfo(
 
   return {
     title: data.title,
-    description: data.body ?? '',
-    author: data.user?.login ?? '',
+    description: data.body ?? "",
+    author: data.user?.login ?? "",
     baseBranch: data.base.ref,
     headBranch: data.head.ref,
     changedFiles: data.changed_files,
@@ -59,13 +61,13 @@ export async function getPRInfo(
 export async function getPRDiff(
   owner: string,
   repo: string,
-  pull_number: number
+  pull_number: number,
 ): Promise<string> {
   const { data } = await octokit.pulls.get({
     owner,
     repo,
     pull_number,
-    mediaType: { format: 'diff' },
+    mediaType: { format: "diff" },
   });
 
   return data as unknown as string;
@@ -77,7 +79,7 @@ export async function createPRComment(
   owner: string,
   repo: string,
   pull_number: number,
-  body: string
+  body: string,
 ): Promise<string> {
   const { data } = await octokit.issues.createComment({
     owner,
