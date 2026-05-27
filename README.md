@@ -16,13 +16,13 @@
 
 ## 技术栈
 
-| 模块 | 技术 |
-|------|------|
-| 前端框架 | Next.js 16 + React + Tailwind CSS |
-| AI 模型 | Anthropic Claude（via DashScope 中转） |
-| GitHub 集成 | Octokit REST SDK |
-| 数据库 | PostgreSQL + pgvector（Drizzle ORM） |
-| 部署 | Vercel + Railway |
+| 模块        | 技术                                   |
+| ----------- | -------------------------------------- |
+| 前端框架    | Next.js 16 + React + Tailwind CSS      |
+| AI 模型     | Anthropic Claude（via DashScope 中转） |
+| GitHub 集成 | Octokit REST SDK                       |
+| 数据库      | PostgreSQL + pgvector（Drizzle ORM）   |
+| 部署        | Vercel + Railway                       |
 
 ---
 
@@ -54,7 +54,7 @@ cp .env.example .env.local
 
 ```env
 # AI 模型（DashScope 中转）
-DASHSCOPE_API_KEY=your_dashscope_api_key
+API_KEY=your_api_key
 
 # GitHub
 GITHUB_TOKEN=your_github_personal_access_token
@@ -64,6 +64,7 @@ DATABASE_URL=postgresql://user:password@localhost:5432/code_reviewer
 ```
 
 **GitHub Token 权限要求：**
+
 - `repo` — 读取私有仓库 PR
 - `public_repo` — 读取公开仓库 PR（只审查公开仓库时勾这个就够）
 
@@ -150,6 +151,7 @@ diff 按文件分块（避免超出 context window）
 ## 开发计划
 
 ### MVP（当前）
+
 - [x] PR 链接解析
 - [x] GitHub API 拉取 diff
 - [x] AI 生成 review 意见（streaming）
@@ -157,12 +159,14 @@ diff 按文件分块（避免超出 context window）
 - [x] 一键发布到 GitHub PR 评论
 
 ### v1.1
+
 - [ ] GitHub Webhook 自动触发
 - [ ] 用户登录（GitHub OAuth）
 - [ ] Review 历史记录
 - [ ] 点赞/踩反馈机制
 
 ### v1.2
+
 - [ ] RAG：存储代码规范，review 时自动检索
 - [ ] 自定义 review 规则
 - [ ] 多语言支持
@@ -172,11 +176,13 @@ diff 按文件分块（避免超出 context window）
 
 ## 环境变量说明
 
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `DASHSCOPE_API_KEY` | ✅ | 阿里云 DashScope API Key |
-| `GITHUB_TOKEN` | ✅ | GitHub Personal Access Token |
-| `DATABASE_URL` | ✅ | PostgreSQL 连接字符串 |
+| 变量名         | 必填 | 说明                                                         |
+| -------------- | ---- | ------------------------------------------------------------ |
+| `API_KEY`      | ✅   | API Key                                                      |
+| `GITHUB_TOKEN` | ✅   | GitHub Personal Access Token                                 |
+| `DATABASE_URL` | ✅   | PostgreSQL 连接字符串                                        |
+| `BASE_URL`     | ✅   | 模型API地址，可以考虑接入中转站（前提是要支持Anthropic API） |
+| `MODEL_NAME`   | ✅   | 模型名称                                                     |
 
 ---
 
@@ -230,4 +236,4 @@ MIT
 
 ---
 
-*最后更新：2026 年 5 月*
+_最后更新：2026 年 5 月_

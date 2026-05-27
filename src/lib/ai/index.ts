@@ -6,9 +6,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { FileDiff } from "../diff/type";
 import { formatDiffForReview } from "../diff";
 
+//默认走的是Claude官方api，当然你也可以自行在env环境中配置这俩变量，桥接DashScope等等中转站。
 const client = new Anthropic({
   baseURL: process.env.BASE_URL ?? "https://api.anthropic.com",
-  apiKey: process.env.DASHSCOPE_API_KEY,
+  apiKey: process.env.API_KEY ?? "",
 });
 
 const MODEL_NAME = process.env.MODEL_NAME ?? "qwen-plus-2025-07-28";
