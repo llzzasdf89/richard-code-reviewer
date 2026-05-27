@@ -5,13 +5,7 @@
  */
 
 // 单个文件的 diff 块
-export interface FileDiff {
-  filename: string;
-  status: "added" | "modified" | "deleted" | "renamed";
-  additions: number;
-  deletions: number;
-  content: string; // 这个文件的完整 diff 内容
-}
+import { FileDiff } from "./type";
 
 // 不需要 review 的文件（lock 文件、自动生成等）
 const SKIP_PATTERNS = [
@@ -55,9 +49,14 @@ export function parseDiff(rawDiff: string): FileDiff[] {
 
     // 判断文件状态
     let status: FileDiff["status"] = "modified";
+    let oldFileName: string | undefined;
     if (fileDiff.includes("new file mode")) status = "added";
     else if (fileDiff.includes("deleted file mode")) status = "deleted";
-    else if (fileDiff.includes("rename from")) status = "renamed";
+    else if (fileDiff.includes("rename from")) {
+      status = "renamed";
+      const renameFromMatch = fileDiff.match(/^rename from (.+)$/m);
+      if (renameFromMatch) oldFileName = renameFromMatch[1].trim();
+    }
 
     // 统计增删行数
     let additions = 0;
@@ -73,6 +72,7 @@ export function parseDiff(rawDiff: string): FileDiff[] {
       additions,
       deletions,
       content: "diff --git " + fileDiff,
+      ...(oldFileName && { oldFileName }),
     });
   }
 
@@ -145,7 +145,12 @@ export function formatDiffForReview(files: FileDiff[]): string {
         renamed: "重命名文件",
       }[file.status];
 
-      return `## ${file.filename} (${statusLabel}，+${file.additions} -${file.deletions})
+      const renameNote =
+        file.status === "renamed" && file.oldFileName
+          ? `，原名 ${file.oldFileName}`
+          : "";
+
+      return `## ${file.filename} (${statusLabel}${renameNote}，+${file.additions} -${file.deletions})
 
 \`\`\`diff
 ${file.content}

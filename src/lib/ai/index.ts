@@ -7,11 +7,11 @@ import type { FileDiff } from "../diff/type";
 import { formatDiffForReview } from "../diff";
 
 const client = new Anthropic({
-  baseURL: "https://dashscope.aliyuncs.com/apps/anthropic",
+  baseURL: process.env.BASE_URL ?? "https://api.anthropic.com",
   apiKey: process.env.DASHSCOPE_API_KEY,
 });
 
-const MODEL_NAME = "qwen-plus-2025-07-28";
+const MODEL_NAME = process.env.MODEL_NAME ?? "qwen-plus-2025-07-28";
 
 const SYSTEM_PROMPT = `你是一位经验丰富的高级工程师，正在对 GitHub Pull Request 进行代码审查。
 

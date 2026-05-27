@@ -5,4 +5,5 @@ export interface FileDiff {
   additions: number;
   deletions: number;
   content: string; // 这个文件的完整 diff 内容
+  oldFileName?: string;
 }

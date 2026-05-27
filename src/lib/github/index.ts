@@ -70,7 +70,7 @@ export async function getPRDiff(
     mediaType: { format: "diff" },
   });
 
-  return data as unknown as string;
+  return typeof data === "string" ? data : "";
 }
 
 // ─── 发评论到 PR ──────────────────────────────────────────────────────────────
