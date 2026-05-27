@@ -16,13 +16,13 @@
 
 ## 技术栈
 
-| 模块        | 技术                                   |
-| ----------- | -------------------------------------- |
-| 前端框架    | Next.js 16 + React + Tailwind CSS      |
-| AI 模型     | Anthropic Claude（via DashScope 中转） |
-| GitHub 集成 | Octokit REST SDK                       |
-| 数据库      | PostgreSQL + pgvector（Drizzle ORM）   |
-| 部署        | Vercel + Railway                       |
+| 模块        | 技术                                 |
+| ----------- | ------------------------------------ |
+| 前端框架    | Next.js 16 + React + Tailwind CSS    |
+| AI 模型     | Anthropic Claude                     |
+| GitHub 集成 | Octokit REST SDK                     |
+| 数据库      | PostgreSQL + pgvector（Drizzle ORM） |
+| 部署        | Vercel + Railway                     |
 
 ---
 
@@ -53,8 +53,10 @@ cp .env.example .env.local
 填写以下配置：
 
 ```env
-# AI 模型（DashScope 中转）
+# AI 模型
 API_KEY=your_api_key
+BASE_URL=中转站地址/模型API调用地址
+MODEL_NAME=模型名称
 
 # GitHub
 GITHUB_TOKEN=your_github_personal_access_token
