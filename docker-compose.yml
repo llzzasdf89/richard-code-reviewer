@@ -1,0 +1,10 @@
+services:
+  app:
+    image: 865266771686.dkr.ecr.ap-northeast-1.amazonaws.com/richard-code-reviewer
+    build: .
+    container_name: richard-code-reviewer
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env
+    restart: always

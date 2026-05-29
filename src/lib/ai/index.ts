@@ -6,22 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { FileDiff } from "../diff/type";
 import { formatDiffForReview } from "../diff";
 
-//默认走的是Claude官方api，当然你也可以自行在env环境中配置这俩变量，桥接DashScope等等中转站。
-const client = new Anthropic({
-  baseURL:
-    process.env.BASE_URL ||
-    (() => {
-      throw new Error("Missing BASE_URL");
-    })(),
-  apiKey:
-    process.env.API_KEY ||
-    (() => {
-      throw new Error("Missing API_KEY");
-    })(),
-});
-
-const MODEL_NAME = process.env.MODEL_NAME ?? "qwen-plus-2025-07-28";
-
+//系统提示词
 const SYSTEM_PROMPT = `你是一位经验丰富的高级工程师，正在对 GitHub Pull Request 进行代码审查。
 
 你的 review 需要关注以下几个维度：
@@ -39,6 +24,25 @@ const SYSTEM_PROMPT = `你是一位经验丰富的高级工程师，正在对 Gi
 
 语言：用中文回复。`;
 
+//采用单例模式维护对应的模型客户端
+let client: Anthropic | null = null;
+
+function getModelClient() {
+  if (!process?.env?.BASE_URL || !process.env.API_KEY) {
+    throw Error(
+      "[Model Client] Missing required properties: BASE_URL | API_KEY, please make sure they are in environment settings",
+    );
+  }
+  if (client instanceof Anthropic) {
+    return client;
+  }
+
+  //默认走的是Claude官方api，当然你也可以自行在env环境中配置这俩变量，桥接DashScope等等中转站。
+  return (client = new Anthropic({
+    baseURL: process.env.BASE_URL,
+    apiKey: process.env.API_KEY,
+  }));
+}
 // ─── 单批 diff 生成 review（非 streaming）────────────────────────────────────
 
 export async function reviewDiffBatch(
@@ -47,9 +51,9 @@ export async function reviewDiffBatch(
   prDescription: string,
 ): Promise<string> {
   const diffText = formatDiffForReview(files);
-
+  const client = getModelClient();
   const response = await client.messages.create({
-    model: MODEL_NAME,
+    model: process.env.MODEL_NAME ?? "qwen-plus-2025-07-28",
     max_tokens: 4000,
     system: SYSTEM_PROMPT,
     messages: [
@@ -85,7 +89,7 @@ export async function reviewPR(
   onBatchStart: (current: number, total: number) => void, // 开始新批次时回调
 ): Promise<string> {
   const results: string[] = [];
-
+  const client = getModelClient();
   for (let i = 0; i < batches.length; i++) {
     const batch = batches[i];
     onBatchStart(i + 1, batches.length);
@@ -100,7 +104,7 @@ export async function reviewPR(
 
     // streaming 调用
     const stream = await client.messages.stream({
-      model: MODEL_NAME,
+      model: process.env.MODEL_NAME ?? "qwen-plus-2025-07-28",
       max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [

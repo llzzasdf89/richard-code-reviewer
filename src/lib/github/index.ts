@@ -1,10 +1,18 @@
 import { Octokit } from "@octokit/rest";
-if (!process.env.GITHUB_TOKEN) {
-  throw new Error("缺少 GITHUB_TOKEN 环境变量");
+let OctokitInstance: Octokit | null = null; //全局实例，采用单例模式
+
+//工厂函数，返回OctoKit单例
+function getOctokit() {
+  if (!process.env.GITHUB_TOKEN) {
+    throw new Error("缺少 GITHUB_TOKEN 环境变量");
+  }
+  if (!OctokitInstance) {
+    OctokitInstance = new Octokit({
+      auth: process.env.GITHUB_TOKEN,
+    });
+  }
+  return OctokitInstance;
 }
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-});
 
 // ─── 解析 PR 链接 ────────────────────────────────────────────────────────────
 // 输入：https://github.com/facebook/react/pull/1234
@@ -37,6 +45,7 @@ export async function getPRInfo(
   repo: string,
   pull_number: number,
 ) {
+  const octokit = getOctokit();
   const { data } = await octokit.pulls.get({
     owner,
     repo,
@@ -63,6 +72,7 @@ export async function getPRDiff(
   repo: string,
   pull_number: number,
 ): Promise<string> {
+  const octokit = getOctokit();
   const { data } = await octokit.pulls.get({
     owner,
     repo,
@@ -81,6 +91,7 @@ export async function createPRComment(
   pull_number: number,
   body: string,
 ): Promise<string> {
+  const octokit = getOctokit();
   const { data } = await octokit.issues.createComment({
     owner,
     repo,

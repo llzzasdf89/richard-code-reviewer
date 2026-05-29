@@ -1,12 +1,9 @@
 "use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 interface SiderBarProps {
-  metaData: {
-    title: string;
-    description: string;
-  };
+  metaData: Metadata;
 }
 
 const navItems = [
@@ -28,7 +25,7 @@ export default function Sidebar({ metaData }: SiderBarProps) {
       <div className="sidebar-logo">
         <div className="logo-mark">
           <div className="logo-icon">⚡</div>
-          <span className="logo-text">{metaData.title}</span>
+          <span className="logo-text">{metaData.title as string}</span>
           <span className="logo-badge">AI</span>
         </div>
       </div>
